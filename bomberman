@@ -1,0 +1,205 @@
+import pygame
+from pygame import *
+from random import randint
+
+
+def foguinho(img, pos, con, tamanho):
+    morre = []
+    para1 = False
+    para2 = False
+    para3 = False
+    para4 = False
+    if con == 0:
+        morre.append(pos)
+    display.blit(img, pos)
+    for e in range(1, tamanho+1):
+        if con > 50:
+            if [pos[0]+(50*e), pos[1]] in barreira_pos:
+                para1 = True
+            if [pos[0]-(50*e), pos[1]] in barreira_pos:
+                para2 = True
+            if [pos[0], pos[1]+(50*e)] in barreira_pos:
+                para3 = True
+            if [pos[0], pos[1]-(50*e)] in barreira_pos:
+                para4 = True
+            if para1 is False:
+                display.blit(img, (pos[0]+(50*e), pos[1]))
+                morre.append([pos[0]+(50*e), pos[1]])
+            if para2 is False:
+                display.blit(img, (pos[0]-(50*e), pos[1]))
+                morre.append([pos[0]-(50*e), pos[1]])
+            if para3 is False:
+                display.blit(img, (pos[0], pos[1]+(50*e)))
+                morre.append([pos[0], pos[1]+(50*e)])
+            if para4 is False:
+                display.blit(img, (pos[0], pos[1]-(50*e)))
+                morre.append([pos[0], pos[1]+(50*e)])
+    for e in morre:
+        for f in barreira_pos:
+            if e == f:
+                morre.remove(e)
+    return morre
+
+
+def aleatorio():
+    a = randint(0, 500)
+    b = randint(0, 500)
+    a = (a//50)*50
+    b = (b//50)*50
+    return [a, b]
+
+
+pygame.display.init()
+# display
+display = pygame.display.set_mode((500, 500))
+display.fill((0, 0, 0))
+
+# loads de imagem
+addbomba = pygame.Surface((22, 22))
+addbomba.fill((255, 255, 0))
+fogo_i = pygame.Surface((50, 50))
+fogo_i.fill((250, 0, 0))
+heroi = pygame.image.load('heroi.jpeg')
+bomba = pygame.image.load('bomba.jpg')
+vilão = pygame.image.load('vilão.jpeg')
+#vilão = pygame.Surface((22, 22))
+barreira = pygame.Surface((50, 50))
+fundo = pygame.Surface((48, 48))
+fundo.fill((75, 54, 33))
+barreira_pos = []
+
+# fazendo o plano de fundo
+for x in range(0, 10):
+    for y in range(0, 10):
+        display.blit(fundo, [x*50+1, y*50+1])
+        if x == 1 or x == 8:
+            if y is not 0 and y is not 9:
+                barreira_pos.append([x*50, y*50])
+                display.blit(barreira, [x*50, y*50])
+        if x == 4 or x == 5:
+            if y in [3, 2, 6, 7]:
+                barreira_pos.append([x*50, y*50])
+                display.blit(barreira, [x*50, y*50])
+
+# lista de posição
+tamanhov = tamanhoh = 1
+quantbh_real = quantbv_real = 0
+addbomba_pos = aleatorio()
+vilão_pos = [450, 450]
+bombas = []
+fogos = []
+morre = []
+heroi_pos = [0, 0]
+personagem = [[tamanhov, vilão_pos], [tamanhoh, heroi_pos]]
+fogo = False
+con = 0
+morte = False
+
+
+while True:
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            pygame.quit()
+        if event.type == KEYDOWN:
+            # se for pra algum lugar q não pode volta
+            memoriah = heroi_pos[:]
+            memoriav = vilão_pos[:]
+            # movimentos vilão
+            if event.key == K_DOWN:
+                vilão_pos[1] += 50
+            if event.key == K_UP:
+                vilão_pos[1] -= 50
+            if event.key == K_LEFT:
+                vilão_pos[0] -= 50
+            if event.key == K_RIGHT:
+                vilão_pos[0] += 50
+            # movimentos heroi
+            if event.key == K_s:
+                heroi_pos[1] += 50
+            if event.key == K_w:
+                heroi_pos[1] -= 50
+            if event.key == K_a:
+                heroi_pos[0] -= 50
+            if event.key == K_d:
+                heroi_pos[0] += 50
+            # para não sair da tela
+            if 0 > vilão_pos[0] or vilão_pos[0] > 450 or 0 > vilão_pos[1] or vilão_pos[1] > 450:
+                vilão_pos = memoriav[:]
+            if 0 > heroi_pos[0] or heroi_pos[0] > 450 or 0 > heroi_pos[1] or heroi_pos[1] > 450:
+                heroi_pos = memoriah[:]
+            # para não passar pelas barreiras
+            for c in barreira_pos:
+                if vilão_pos == c:
+                    vilão_pos = memoriav[:]
+                if heroi_pos == c:
+                    heroi_pos = memoriah[:]
+            for c in bombas:
+                if c[1] == vilão_pos:
+                    vilão_pos = memoriav[:]
+                if c[1] == heroi_pos:
+                    heroi_pos = memoriah[:]
+            if event.key == K_SPACE:
+                cont = 0
+                bombas.append([bomba, heroi_pos[:], cont, False, 'heroi'])
+            if event.key == K_KP_ENTER:
+                cont = 0
+                bombas.append([bomba, vilão_pos[:], cont, False, 'vilão'])
+            if event.key == K_q:
+                print(f'addbomba_pos: {addbomba_pos}'
+                      f'heroi_pos: {heroi_pos}'
+                      f'vilão_pos: {vilão_pos}')
+    # criação do cenário
+    for x in range(0, 10):
+        for y in range(0, 10):
+            display.blit(fundo, [x * 50 + 1, y * 50 + 1])
+            if x == 1 or x == 8:
+                if y is not 0 and y is not 9:
+                    display.blit(barreira, [x * 50, y * 50])
+            if x == 4 or x == 5:
+                if y in [3, 2, 6, 7]:
+                    display.blit(barreira, [x * 50, y * 50])
+    # blits
+    display.blit(heroi, heroi_pos)
+    display.blit(vilão, vilão_pos)
+    for c in personagem:
+        if c[1] == addbomba_pos:
+            c[0] += 1
+            addbomba_pos = aleatorio()
+    while addbomba_pos in barreira_pos:
+        print(addbomba_pos)
+        addbomba_pos = aleatorio()
+        print(addbomba_pos)
+    display.blit(addbomba, addbomba_pos)
+
+    # blit de bombas
+    for c in bombas:
+        display.blit(c[0], c[1])
+        if not c[3]:
+            c[2] += 1
+        if c[2] == 1500:
+            c[3] = True
+            c[2] = 0
+            fogo_pos = c[1][:]
+            display.fill((0, 0, 0))
+        if c[3] is True:
+            if c[4] == 'vilão':
+                morre = foguinho(fogo_i, c[1], c[2], personagem[0][0])
+            if c[4] == 'heroi':
+                morre = foguinho(fogo_i, c[1], c[2], personagem[1][0])
+            c[2] += 1
+            if c[2] == 250:
+                display.fill((0, 0, 0))
+                bombas.remove(c)
+                c[3] = False
+            for e in morre:
+                for f in barreira_pos:
+                    if e == f:
+                        display.blit(barreira, e)
+                if heroi_pos == e:
+                    morte = True
+                if vilão_pos == e:
+                    morte = True
+
+    pygame.display.update()
+    if morte:
+        break
